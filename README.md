@@ -12,3 +12,4 @@ Implement Login using JWT (JSON WEB TOKENS)
 3. Mostly Used in Authentication Process.
 
 ![JWT](https://user-images.githubusercontent.com/68892126/213379596-340675fc-eb21-4c1a-bdbc-bc7207e5beb1.jpg)
+![JWT Validation](https://user-images.githubusercontent.com/68892126/213381281-6ff59b84-2a13-4142-b3fb-2057ab113a95.jpg)
