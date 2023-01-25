@@ -1,22 +1,33 @@
 package com.blog.springblog.security;
 
+import com.blog.springblog.exception.SpringBlogException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.security.Key;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.Date;
 
 @Service
 public class JwtProvider {
 
-    private Key key;
+    private KeyStore keyStore;
 
     @PostConstruct
     public void init() {
-        key =  Keys.secretKeyFor(SignatureAlgorithm.HS512);
+        try {
+            keyStore =  KeyStore.getInstance("JKS");
+            InputStream inputStream = getClass().getResourceAsStream("/springblog.jks");
+            keyStore.load(inputStream, "secret".toCharArray());
+        } catch(KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
+            throw new SpringBlogException("Exception occured while loading keystore");
+        }
+
     }
     public String generateToken(Authentication authentication)  {
 
@@ -26,7 +37,7 @@ public class JwtProvider {
         JwtBuilder builder = Jwts.builder()
                 .setSubject(authentication.getName())
                 .setIssuedAt(new Date())
-                .signWith(key);
+                .signWith(getPrivateKey());
 
         // Add the expiration time
         builder.setExpiration(new Date(System.currentTimeMillis() + expirationTime));
@@ -36,9 +47,27 @@ public class JwtProvider {
 
     }
 
+    private PrivateKey getPrivateKey() {
+        try {
+            return (PrivateKey) keyStore.getKey("springblog", "secret".toCharArray());
+        } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
+            throw new SpringBlogException("Exception occured while retrieving Private Key from keystore");
+        }
+
+    }
+
     public boolean validateToken1(String jwt) {
-        Jwts.parser().setSigningKey(key).parseClaimsJwt(jwt);
+        Jwts.parser().setSigningKey(getPublicKey()).parseClaimsJwt(jwt);
         return true;
+    }
+
+    private PublicKey getPublicKey() {
+        try {
+            return keyStore.getCertificate("springblog").getPublicKey();
+        } catch (KeyStoreException e) {
+            throw new SpringBlogException("Exception occured while retrieving Private Key from keystore");
+        }
+
     }
 
     public boolean validateToken(String token) {
@@ -46,7 +75,7 @@ public class JwtProvider {
         try {
             // Parse the JWT
             Claims claims = Jwts.parser()
-                    .setSigningKey(key)
+                    .setSigningKey(getPublicKey())
                     .parseClaimsJws(token)
                     .getBody();
 
@@ -66,7 +95,7 @@ public class JwtProvider {
         try {
             // Parse the JWT
             Claims claims = Jwts.parser()
-                    .setSigningKey(key)
+                    .setSigningKey(getPublicKey())
                     .parseClaimsJws(token)
                     .getBody();
 
