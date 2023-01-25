@@ -1,6 +1,5 @@
 package com.blog.springblog.security;
 
-import com.blog.springblog.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.Authentication;
@@ -20,11 +19,6 @@ public class JwtProvider {
         key =  Keys.secretKeyFor(SignatureAlgorithm.HS512);
     }
     public String generateToken(Authentication authentication)  {
-//        String username = authentication.getName();
-//        return Jwts.builder()
-//                .setSubject(username)
-//                .signWith(key)
-//                .compact();
 
         long expirationTime = 864_000_000; // 10 days in milliseconds
 
